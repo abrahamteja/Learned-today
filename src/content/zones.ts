@@ -8,9 +8,9 @@ export const zones: Zone[] = [
     name: "Infrastructure",
     tagline: "Keep the servers, databases and deploys alive.",
     levels: [
-      { id: "infra-disk-full", title: "Disk full at 3 AM", tier: "novice", teaches: "Log rotation and disk alerts", status: "planned" },
-      { id: "infra-memory-leak", title: "The slow climb", tier: "novice", teaches: "Spotting a memory leak and restarting safely", status: "planned" },
-      { id: "infra-bad-deploy", title: "It worked in staging", tier: "novice", teaches: "Rolling back a bad deploy", status: "planned" },
+      { id: "infra-disk-full", title: "Disk full at 3 AM", tier: "novice", teaches: "Log levels, log rotation and disk alerts", status: "playable" },
+      { id: "infra-memory-leak", title: "The slow climb", tier: "novice", teaches: "Spotting a memory leak and rolling back", status: "playable" },
+      { id: "infra-bad-deploy", title: "It worked in staging", tier: "novice", teaches: "Rolling back a bad deploy", status: "playable" },
       { id: "infra-slow-query", title: "Checkout is slow", tier: "intermediate", teaches: "Finding a missing database index", status: "planned" },
       { id: "infra-cache-stampede", title: "Cache stampede", tier: "intermediate", teaches: "Cache expiry, locking and warm-up", status: "planned" },
       { id: "infra-queue-backlog", title: "The queue that never drains", tier: "intermediate", teaches: "Consumers, retries and dead-letter queues", status: "planned" },

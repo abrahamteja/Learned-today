@@ -3,10 +3,9 @@ import { zones } from "@/content/zones";
 
 export default function Home() {
   const total = zones.reduce((sum, zone) => sum + zone.levels.length, 0);
-  const playable = zones.reduce(
-    (sum, zone) => sum + zone.levels.filter((level) => level.status === "playable").length,
-    0,
-  );
+  const playableLevels = zones.flatMap((zone) => zone.levels.filter((level) => level.status === "playable"));
+  const playable = playableLevels.length;
+  const first = playableLevels[0];
 
   return (
     <div className="flex flex-col gap-6">
@@ -18,15 +17,22 @@ export default function Home() {
         </p>
       </header>
 
-      <section className="rounded-xl border border-red-400/30 bg-red-400/5 p-4">
-        <p className="font-mono text-xs uppercase tracking-widest text-red-300">Today&apos;s incident</p>
-        <p className="mt-1 text-base">The pager is quiet for now.</p>
-        <p className="mt-1 text-sm text-gray-400">
-          {playable === 0
-            ? `${total} incidents are on the map. The first ones go live this week.`
-            : `${playable} of ${total} incidents are playable.`}
-        </p>
-      </section>
+      {first ? (
+        <Link
+          href={`/play/${first.id}`}
+          className="block rounded-xl border border-red-400/30 bg-red-400/5 p-4 active:bg-red-400/15"
+        >
+          <p className="font-mono text-xs uppercase tracking-widest text-red-300">Incident open</p>
+          <p className="mt-1 text-lg font-medium">{first.title}</p>
+          <p className="mt-1 text-sm text-gray-400">
+            {playable} of {total} incidents are playable. Tap to take the pager.
+          </p>
+        </Link>
+      ) : (
+        <section className="rounded-xl border border-white/10 p-4">
+          <p className="text-base">The pager is quiet for now.</p>
+        </section>
+      )}
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium uppercase tracking-widest text-gray-400">Zones</h2>
