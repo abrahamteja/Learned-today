@@ -19,6 +19,19 @@ The full level map lives in [`src/content/zones.ts`](src/content/zones.ts). Leve
 3. **Act:** choose a fix. The system recovers, or gets worse.
 4. **Explain:** write the root cause in a sentence, and Claude grades it against the level's rubric.
 
+## Writing a level
+
+A level is a JSON file in [`src/content/levels`](src/content/levels), checked against the schema in [`src/engine/level.ts`](src/engine/level.ts):
+
+- **alert:** what the pager says.
+- **clues:** metrics, logs and configs to read. Each one costs simulated minutes.
+- **actions:** what the player can do. Each one `fixes`, `helps`, does `nothing` or `harms`, and moves system health.
+- **startingHealth** and **healthLossPerMinute:** how long the player has before the system goes down.
+- **parMinutes:** how fast a good on-call engineer would fix it.
+- **rootCause** and **lesson:** what broke, the points a good write-up mentions, and the takeaway.
+
+The engine in [`src/engine/incident.ts`](src/engine/incident.ts) is pure functions over plain data: `startIncident`, `readClue`, `takeAction` and `scoreIncident`. A run scores 50 for fixing it, up to 30 for speed against par, and up to 20 for precision, minus 10 for each action that did nothing or made it worse. A broken level file fails the tests and the build.
+
 ## Stack
 
 - Next.js (App Router) with TypeScript and Tailwind, installable on a phone as a web app
@@ -48,7 +61,7 @@ npm run build
 ## Roadmap
 
 - [x] Day 1: app shell, phone install, zone map, CI
-- [ ] Day 2: level format and incident engine, with tests
+- [x] Day 2: level format and incident engine, with tests
 - [ ] Day 3: the incident screen
 - [ ] Day 4: three playable novice infrastructure levels
 - [ ] Day 5: scoring and saved progress
