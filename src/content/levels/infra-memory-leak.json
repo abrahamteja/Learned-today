@@ -1,0 +1,121 @@
+{
+  "id": "infra-memory-leak",
+  "zone": "infra",
+  "tier": "novice",
+  "title": "The slow climb",
+  "alert": {
+    "title": "checkout: 5 restarts in the last hour",
+    "severity": "high",
+    "summary": "Customers see checkout errors every few minutes. Servers are being killed for using too much memory."
+  },
+  "startingHealth": 65,
+  "healthLossPerMinute": 2,
+  "parMinutes": 10,
+  "clues": [
+    {
+      "id": "kill-events",
+      "kind": "log",
+      "title": "Server events",
+      "minutes": 1,
+      "lines": [
+        "10:02 checkout-7f9c  killed: out of memory (limit 1 GB)",
+        "10:14 checkout-4b21  killed: out of memory",
+        "10:27 checkout-7f9c  killed: out of memory",
+        "Each server lives about 25 minutes."
+      ]
+    },
+    {
+      "id": "memory-graph",
+      "kind": "metric",
+      "title": "Memory per server, last 3 days",
+      "minutes": 2,
+      "lines": [
+        "Starts at 300 MB after a restart.",
+        "Climbs in a straight line to 1 GB, then the server is killed.",
+        "The pattern began Tuesday at 4 PM."
+      ]
+    },
+    {
+      "id": "traffic",
+      "kind": "metric",
+      "title": "Checkout requests per minute",
+      "minutes": 1,
+      "lines": [
+        "Flat at about 1,200 all week.",
+        "No spike before or during the restarts."
+      ]
+    },
+    {
+      "id": "recent-deploys",
+      "kind": "note",
+      "title": "Recent deploys",
+      "minutes": 1,
+      "lines": [
+        "Tue 3:52 PM  checkout v3.4.0: cache exchange rates for each request",
+        "Previous: v3.3.2, stable for 3 weeks"
+      ]
+    },
+    {
+      "id": "code-change",
+      "kind": "trace",
+      "title": "What changed in v3.4.0",
+      "minutes": 2,
+      "lines": [
+        "+ const rateCache = new Map()",
+        "+ rateCache.set(request.id, rates)",
+        "  // nothing ever removes entries from rateCache"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "restart-all",
+      "label": "Restart every checkout server",
+      "minutes": 2,
+      "outcome": "nothing",
+      "health": 0,
+      "feedback": "Memory drops to 300 MB and starts climbing again right away."
+    },
+    {
+      "id": "raise-limit",
+      "label": "Raise the memory limit to 2 GB",
+      "minutes": 2,
+      "outcome": "helps",
+      "health": 10,
+      "feedback": "Servers now live about 50 minutes instead of 25. The leak is still there."
+    },
+    {
+      "id": "add-servers",
+      "label": "Add more checkout servers",
+      "minutes": 3,
+      "outcome": "helps",
+      "health": 10,
+      "feedback": "Each server gets fewer requests, so it dies more slowly, but every one still climbs to 1 GB."
+    },
+    {
+      "id": "turn-off-retries",
+      "label": "Turn off payment retries to cut load",
+      "minutes": 1,
+      "outcome": "harms",
+      "health": -25,
+      "feedback": "Card charges now fail for good on the first error, and support tickets start arriving."
+    },
+    {
+      "id": "rollback",
+      "label": "Roll back to v3.3.2",
+      "minutes": 4,
+      "outcome": "fixes",
+      "health": 40,
+      "feedback": "Memory stays flat at 300 MB and checkout errors stop."
+    }
+  ],
+  "rootCause": {
+    "summary": "Version 3.4.0 added a cache keyed by request that never removed entries, so memory grew with every request until servers were killed.",
+    "keyPoints": [
+      "the v3.4.0 deploy added a cache",
+      "the cache never removed old entries",
+      "memory grew until servers hit their limit and were killed"
+    ]
+  },
+  "lesson": "Memory that climbs steadily after a deploy points to a leak in that deploy. Roll back first, then give the cache a size limit."
+}

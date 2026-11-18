@@ -62,8 +62,8 @@ npm run build
 
 - [x] Day 1: app shell, phone install, zone map, CI
 - [x] Day 2: level format and incident engine, with tests
-- [ ] Day 3: the incident screen
-- [ ] Day 4: three playable novice infrastructure levels
+- [x] Day 3: the incident screen
+- [x] Day 4: three playable novice infrastructure levels
 - [ ] Day 5: scoring and saved progress
 - [ ] Day 6: Claude-graded root causes
 - [ ] Day 7: polish from real play, screenshots

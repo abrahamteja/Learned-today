@@ -1,0 +1,122 @@
+{
+  "id": "infra-disk-full",
+  "zone": "infra",
+  "tier": "novice",
+  "title": "Disk full at 3 AM",
+  "alert": {
+    "title": "api-1: disk 97% full",
+    "severity": "high",
+    "summary": "File uploads are failing with errors. The pager went off at 3:04 AM."
+  },
+  "startingHealth": 60,
+  "healthLossPerMinute": 2,
+  "parMinutes": 10,
+  "clues": [
+    {
+      "id": "error-log",
+      "kind": "log",
+      "title": "API error log, last lines",
+      "minutes": 1,
+      "lines": [
+        "03:04:11 ERROR upload failed: ENOSPC: no space left on device",
+        "03:04:12 ERROR upload failed: ENOSPC: no space left on device",
+        "03:04:15 WARN  health check slow: 2140 ms"
+      ]
+    },
+    {
+      "id": "disk-trend",
+      "kind": "metric",
+      "title": "Disk used on api-1, last 7 days",
+      "minutes": 2,
+      "lines": [
+        "Mon 41%  Tue 49%  Wed 57%  Thu 66%",
+        "Fri 74%  Sat 83%  Sun 97%",
+        "Steady growth of about 8% a day since Monday."
+      ]
+    },
+    {
+      "id": "biggest-folders",
+      "kind": "trace",
+      "title": "Biggest folders on the disk",
+      "minutes": 2,
+      "lines": [
+        "38 GB  /var/log/api",
+        " 9 GB  /var/lib/postgresql",
+        " 4 GB  /srv/uploads",
+        "120 MB /tmp"
+      ]
+    },
+    {
+      "id": "api-settings",
+      "kind": "config",
+      "title": "API settings",
+      "minutes": 1,
+      "lines": [
+        "LOG_LEVEL=debug   # set for Monday's release",
+        "LOG_DIR=/var/log/api"
+      ]
+    },
+    {
+      "id": "log-rotation",
+      "kind": "config",
+      "title": "Log rotation rules for /var/log/api",
+      "minutes": 2,
+      "lines": [
+        "weekly",
+        "rotate 52",
+        "# compress   (commented out)"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "restart-api",
+      "label": "Restart the API",
+      "minutes": 2,
+      "outcome": "nothing",
+      "health": 0,
+      "feedback": "The API comes back, but the disk is still 97% full and uploads keep failing."
+    },
+    {
+      "id": "clear-tmp",
+      "label": "Empty /tmp",
+      "minutes": 1,
+      "outcome": "nothing",
+      "health": 0,
+      "feedback": "That freed 120 MB. The disk is still 97% full."
+    },
+    {
+      "id": "delete-uploads",
+      "label": "Delete old files in /srv/uploads",
+      "minutes": 1,
+      "outcome": "harms",
+      "health": -35,
+      "feedback": "You freed 4 GB by deleting customers' files. Support tickets start arriving."
+    },
+    {
+      "id": "compress-old-logs",
+      "label": "Compress old logs",
+      "minutes": 3,
+      "outcome": "helps",
+      "health": 25,
+      "feedback": "That frees 30 GB and uploads work again, but debug logs still fill the disk 8% a day."
+    },
+    {
+      "id": "fix-logging",
+      "label": "Turn debug logging off and compress old logs",
+      "minutes": 4,
+      "outcome": "fixes",
+      "health": 40,
+      "feedback": "Log volume drops 90% and the disk falls to 35%. Uploads recover."
+    }
+  ],
+  "rootCause": {
+    "summary": "Debug logging was left on after Monday's release, and old logs were kept uncompressed, so the log folder filled the disk.",
+    "keyPoints": [
+      "debug logging was left on after the release",
+      "the API logs filled the disk",
+      "old logs were not compressed"
+    ]
+  },
+  "lesson": "Alert on how fast a disk is filling, not only when it is full, and reset log levels after a release."
+}

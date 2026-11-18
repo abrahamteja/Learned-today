@@ -1,0 +1,109 @@
+{
+  "id": "infra-bad-deploy",
+  "zone": "infra",
+  "tier": "novice",
+  "title": "It worked in staging",
+  "alert": {
+    "title": "web: 18% of page loads failing",
+    "severity": "critical",
+    "summary": "Since the 2:10 PM release, about one in five page loads shows an error."
+  },
+  "startingHealth": 50,
+  "healthLossPerMinute": 3,
+  "parMinutes": 8,
+  "clues": [
+    {
+      "id": "error-log",
+      "kind": "log",
+      "title": "Web error log",
+      "minutes": 1,
+      "lines": [
+        "14:11 ERROR cannot read 'currency' of undefined (priceTag.js:42)",
+        "Repeated 2,300 times in 10 minutes."
+      ]
+    },
+    {
+      "id": "deploy-history",
+      "kind": "note",
+      "title": "Deploy history",
+      "minutes": 1,
+      "lines": [
+        "14:10 web v2.18.0 released to every server at once",
+        "Previous: v2.17.4, stable for 9 days"
+      ]
+    },
+    {
+      "id": "errors-by-country",
+      "kind": "metric",
+      "title": "Errors by country",
+      "minutes": 2,
+      "lines": [
+        "US 0%   Canada 0%",
+        "UK 38%  EU 41%",
+        "Only visitors who see prices in pounds or euros hit the error."
+      ]
+    },
+    {
+      "id": "staging-vs-prod",
+      "kind": "config",
+      "title": "Price settings, staging and production",
+      "minutes": 1,
+      "lines": [
+        "staging:    PRICE_CURRENCIES=USD",
+        "production: PRICE_CURRENCIES=USD,EUR,GBP"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "restart-web",
+      "label": "Restart the web servers",
+      "minutes": 2,
+      "outcome": "nothing",
+      "health": 0,
+      "feedback": "Every server comes back on v2.18.0 and the errors continue."
+    },
+    {
+      "id": "add-servers",
+      "label": "Add more web servers",
+      "minutes": 3,
+      "outcome": "nothing",
+      "health": 0,
+      "feedback": "More servers run the same broken code. Still 18% of page loads fail."
+    },
+    {
+      "id": "hotfix",
+      "label": "Write a quick fix and ship it straight to production",
+      "minutes": 6,
+      "outcome": "harms",
+      "health": -20,
+      "feedback": "The untested fix breaks dollar prices too, and errors jump to 60% before you notice."
+    },
+    {
+      "id": "hide-currencies",
+      "label": "Turn off euro and pound prices",
+      "minutes": 2,
+      "outcome": "helps",
+      "health": 15,
+      "feedback": "Errors stop, but UK and EU customers now see prices in dollars and support calls pile up."
+    },
+    {
+      "id": "rollback",
+      "label": "Roll back to v2.17.4",
+      "minutes": 3,
+      "outcome": "fixes",
+      "health": 45,
+      "feedback": "Errors fall to 0.1% within two minutes."
+    }
+  ],
+  "rootCause": {
+    "summary": "Version 2.18.0 broke prices shown in euros and pounds, and staging only tested dollars, so the bug reached every production server at once.",
+    "keyPoints": [
+      "the 2:10 PM release caused the errors",
+      "only euro and pound prices failed",
+      "staging did not test other currencies",
+      "the release went to every server at once"
+    ]
+  },
+  "lesson": "When errors start right after a release, roll back first and debug later. A staging setup that matches production, and releasing to a few servers first, catch this before customers do."
+}

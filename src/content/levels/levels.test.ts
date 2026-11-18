@@ -20,3 +20,24 @@ describe("level files", () => {
     }
   });
 });
+
+describe("every level", () => {
+  it("can still be fixed after reading every clue", async () => {
+    const { readClue, startIncident, takeAction } = await import("@/engine/incident");
+    for (const level of levels) {
+      let state = startIncident(level);
+      for (const clue of level.clues) state = readClue(level, state, clue.id);
+      expect(state.status, `${level.id}: down before any action`).toBe("active");
+      const fix = level.actions.find((a) => a.outcome === "fixes");
+      state = takeAction(level, state, fix!.id);
+      expect(state.status, `${level.id}: the fix should still land`).toBe("resolved");
+    }
+  });
+
+  it("has a par time the fix can beat", () => {
+    for (const level of levels) {
+      const fastest = Math.min(...level.actions.filter((a) => a.outcome === "fixes").map((a) => a.minutes));
+      expect(fastest, level.id).toBeLessThanOrEqual(level.parMinutes);
+    }
+  });
+});

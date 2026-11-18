@@ -38,17 +38,39 @@ export default async function ZonePage({ params }: PageProps<"/zones/[zone]">) {
           <section key={tier} className="flex flex-col gap-2">
             <h2 className="text-sm font-medium uppercase tracking-widest text-gray-400">{tierLabel[tier]}</h2>
             <ol className="flex flex-col gap-2">
-              {levels.map((level) => (
-                <li key={level.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="text-base font-medium">{level.title}</span>
-                    <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 font-mono text-xs text-gray-400">
-                      {level.status === "playable" ? "Play" : "Soon"}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-gray-400">{level.teaches}</p>
-                </li>
-              ))}
+              {levels.map((level) => {
+                const body = (
+                  <>
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-base font-medium">{level.title}</span>
+                      {level.status === "playable" ? (
+                        <span className="shrink-0 rounded-full bg-emerald-500 px-2 py-0.5 font-mono text-xs font-medium text-gray-950">
+                          Play
+                        </span>
+                      ) : (
+                        <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 font-mono text-xs text-gray-400">
+                          Soon
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-sm text-gray-400">{level.teaches}</p>
+                  </>
+                );
+                return (
+                  <li key={level.id}>
+                    {level.status === "playable" ? (
+                      <Link
+                        href={`/play/${level.id}`}
+                        className="block rounded-xl border border-emerald-400/30 bg-emerald-400/5 p-4 active:bg-emerald-400/15"
+                      >
+                        {body}
+                      </Link>
+                    ) : (
+                      <div className="rounded-xl border border-white/10 bg-white/5 p-4 opacity-70">{body}</div>
+                    )}
+                  </li>
+                );
+              })}
             </ol>
           </section>
         );
